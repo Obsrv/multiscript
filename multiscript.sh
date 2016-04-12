@@ -38,45 +38,83 @@ function entx {
 	echo
 	tar -xf crda-3.18.tar
 	tar -xf wireless-regdb-2016.02.08.tar
-	echo
-	echo "Now that they're unpacked, you will need to do some editing."
-	echo "(DO NOT exit this terminal) First, open up the wireless-regdb folder."
-	echo "Now you need to find a file called db.txt. (you will need to use root/sudo)"
-	echo "Scroll down to 'country BO'"
-	echo "Change the first (20) that you see, to (30)"
-	echo "Once you're done with that, make SURE YOU SAVE!"
-	pause
-	echo
-	echo
-	echo "While you're still in that folder, type 'sudo make'."
-	echo "Now, change to the current CRDA folder ('cd /lib/crda')"
-	echo "Type 'sudo mv regulatory.bin regulatoryOLD.bin' Here, we rename the file"
-	echo "so that if anything goes wrong, we can always restore it."
-	pause
-	echo
-	echo
-	echo "Now move back to the wireless-regdb folder."
-	echo "Type 'sudo cp regulatory.bin /lib/crda"
-	echo "Now go back to /lib/crda (I know, this is boring, repetive, and long. But it's completely necessicary."
-	echo "Trust me, if it wasn't, then I wouldn't be typing all of this out for you.)"
-	echo "Make for sure that /lib/crda contains 'regulatory.bin'"
-	pause
-	echo
-	echo
-	echo "Now go back to the wireless-regdb folder (Ugh...)"
-	echo "Type this in: 'sudo cp *.pem ~/Desktop/crda-3.18/pubkeys' (change out the directory with the dir you have the crda folder in)"
-	echo "Now this: 'cd /lib/crda/pubkeys'"
-	echo "And this: 'sudo cp benh@debian.org.key.pub.pem ~/Desktop/crda-3.18/pubkeys'"
-	echo "What this does is copies all of the .pem files used to validate the regulatory.bin"
-	pause
-	echo
-	echo "Okay, remember when we downloaded and unpacked those tars?"
-	echo "Well, now you're going to need to edit the makefile in the crda-3.18 folder. Go ahead and open that directory."
-	echo "Type: 'sudo nano Makefile'"
-	echo "Now, change the 3rd line from: REGBIN?=/usr/lib/crda/regulatory.bin to REGBIN?=/lib/crda/regulatory.bin"
-	echo "In other words, remove /usr on line 3"
-	echo "Now, type 'sudo make'"
-	echo "and then 'sudo make install'"
+	#Save current path so you skip needless manual directory navigation from user
+	regdbPath="$(pwd)"
+	#Go on with the flow
+	#Find path to program
+	pp="$(find / -name wireless-regdb-2016.02.08)"
+	#echo
+	#echo "Now that they're unpacked, you will need to do some editing."
+	#echo "(DO NOT exit this terminal) First, open up the wireless-regdb folder."
+	#Navigate to path
+	cd $pp
+	#echo "Now you need to find a file called db.txt. (you will need to use root/sudo)"
+	#echo "Scroll down to 'country BO'"
+	#echo "Change the first (20) that you see, to (30)"
+	#echo "Once you're done with that, make SURE YOU SAVE!"
+	#Replace 20 with 30 on line 179 (exactly where the "20" in country BO is)
+	sed -i '179s/20/30/' db.txt
+	#pause
+	#echo
+	#echo
+	#echo "While you're still in that folder, type 'sudo make'."
+	#You can do it yourself in the script like so:
+	sudo make
+	#echo "Now, change to the current CRDA folder ('cd /lib/crda')"
+	#Can also be done by yourself like so:
+	cd /lib/crda
+	#echo "Type 'sudo mv regulatory.bin regulatoryOLD.bin' Here, we rename the file"
+	#You guessed it
+	sudo mv regulatory.bin regulatoryOLD.bin
+	#echo "so that if anything goes wrong, we can always restore it."
+	#No need for pause imo
+	#pause
+	#echo
+	#echo
+	#Because we saved the path to the folder earlier we can navigate to it automatically like so:
+	#echo "Now move back to the wireless-regdb folder."
+	cd $pp
+	#More stuff for potential automation
+	#echo "Type 'sudo cp regulatory.bin /lib/crda"
+	sudo cp regulatory.bin /lib/crda
+	#echo "Now go back to /lib/crda (I know, this is boring, repetive, and long. But it's completely necessicary."
+	#echo "Trust me, if it wasn't, then I wouldn't be typing all of this out for you.)"
+	#echo "Make for sure that /lib/crda contains 'regulatory.bin'"
+	#Check if file exsists
+	if [ -e "/lib/crda/regulatory.bin" ]
+	then
+		echo "Almost done."
+	fi
+	#pause
+	#echo
+	#echo
+	#echo "Now go back to the wireless-regdb folder (Ugh...)"
+	#Again, using path stored in variable
+	#echo "Type this in: 'sudo cp *.pem ~/Desktop/crda-3.18/pubkeys' (change out the directory with the dir you have the crda folder in)"
+	#Find path to crda
+	crdaPath="$(find / -name crda-3.18)"
+	#Copy stuff into correct path
+	sudo cp *.pem $crdaPath/pubkeys
+	#echo "Now this: 'cd /lib/crda/pubkeys'"
+	cd /lib/crda/pubkeys
+	#echo "And this: 'sudo cp benh@debian.org.key.pub.pem ~/Desktop/crda-3.18/pubkeys'"
+	sudo cp benh@debian.org.key.pub.pem ~/Desktop/crda-3.18/pubkeys
+	#echo "What this does is copies all of the .pem files used to validate the regulatory.bin"
+	#pause
+	#echo
+	#Let's automate this as well
+	#echo "Okay, remember when we downloaded and unpacked those tars?"
+	#echo "Well, now you're going to need to edit the makefile in the crda-3.18 folder. Go ahead and open that directory."
+	cd $crdaPath
+	#echo "Type: 'sudo nano Makefile'"
+	#echo "Now, change the 3rd line from: REGBIN?=/usr/lib/crda/regulatory.bin to REGBIN?=/lib/crda/regulatory.bin"
+	#echo "In other words, remove /usr on line 3"
+	#Remove "/usr" automatically
+	sed -i '3s/\/usr//' Makefile
+	#echo "Now, type 'sudo make'"
+	sudo make
+	#echo "and then 'sudo make install'"
+	sudo make install
 	echo "AND FINALLY, FINALLY, YOU HAVE REACHED THE END <3. Good job. TX power is FINALLY enabled. You've earned yourself a beer."
 	echo "If you have any errors or had trouble please go to this website. (Credit to the original author)"
 	echo
